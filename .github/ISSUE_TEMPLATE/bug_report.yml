@@ -24,8 +24,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: Library version
-      placeholder: For example, 0.1.0
+      label: Affected version or commit
+      placeholder: For example, 0.1.0 or a commit SHA
     validations:
       required: true
   - type: input

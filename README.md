@@ -3,6 +3,7 @@
 Fail fast on unsafe Spring Boot configuration before it reaches production.
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![CI](https://github.com/Emin0v/spring-boot-config-sentinel/actions/workflows/ci.yml/badge.svg)](https://github.com/Emin0v/spring-boot-config-sentinel/actions/workflows/ci.yml)
 
 ## Why
 
@@ -46,7 +47,11 @@ This project is not a secret manager, full security scanner, configuration serve
 
 ## Development
 
-The wrapper-based build command will be documented with the initial Java scaffold.
+Java 21 is required. Run the complete build and test suite with:
+
+```bash
+./gradlew check
+```
 
 ## Contributing
 

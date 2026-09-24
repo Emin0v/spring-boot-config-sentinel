@@ -2,7 +2,11 @@
 
 Thanks for considering a contribution.
 
-The project scaffold and its canonical wrapper-based build command are being established in the initial repository setup. Once present, use the command documented in the README to build the project and run its complete test suite.
+Java 21 is required. Build the project and run the complete test suite with:
+
+```bash
+./gradlew check
+```
 
 Create a short-lived branch and open a focused pull request against `main`. Explain what changed, why it is needed, and how it was tested. Add or update tests whenever behavior changes, and update documentation for user-visible changes.
 

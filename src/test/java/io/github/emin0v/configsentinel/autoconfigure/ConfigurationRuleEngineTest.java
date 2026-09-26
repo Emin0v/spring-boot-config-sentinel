@@ -3,6 +3,7 @@ package io.github.emin0v.configsentinel.autoconfigure;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
 import io.github.emin0v.configsentinel.rule.ConfigurationRule;
 import io.github.emin0v.configsentinel.rule.ConfigurationViolation;
@@ -11,6 +12,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.core.env.Environment;
 import org.springframework.mock.env.MockEnvironment;
 
@@ -19,33 +23,33 @@ class ConfigurationRuleEngineTest {
     private final Environment environment = new MockEnvironment();
 
     @Test
-    void returnsNoViolationsWhenNoRulesAreConfigured() {
+    void returnsNoViolationsWithoutRules() {
         ConfigurationRuleEngine engine = new ConfigurationRuleEngine(List.of());
 
         assertThat(engine.evaluate(environment)).isEmpty();
     }
 
     @Test
-    void excludesPassingRulesFromTheResult() {
+    void excludesPassingRules() {
         ConfigurationRuleEngine engine = new ConfigurationRuleEngine(List.of(passingRule("passing.rule")));
 
         assertThat(engine.evaluate(environment)).isEmpty();
     }
 
     @Test
-    void returnsViolationsInRuleIdentifierOrder() {
+    void returnsViolationsInRuleIdOrder() {
         ConfigurationViolation firstViolation = new ConfigurationViolation("alpha.rule", "First violation");
         ConfigurationViolation secondViolation = new ConfigurationViolation("bravo.rule", "Second violation");
         ConfigurationRuleEngine engine = new ConfigurationRuleEngine(List.of(
-                violatedRule(secondViolation),
+                failingRule(secondViolation),
                 passingRule("charlie.rule"),
-                violatedRule(firstViolation)));
+                failingRule(firstViolation)));
 
         assertThat(engine.evaluate(environment)).containsExactly(firstViolation, secondViolation);
     }
 
     @Test
-    void evaluatesEveryConfiguredRule() {
+    void evaluatesAllRules() {
         List<String> evaluatedRuleIds = new ArrayList<>();
         ConfigurationRule firstRule = rule("first.rule", ignored -> {
             evaluatedRuleIds.add("first.rule");
@@ -63,7 +67,7 @@ class ConfigurationRuleEngineTest {
     }
 
     @Test
-    void rejectsDuplicateRuleIdentifiers() {
+    void rejectsDuplicateRuleIds() {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new ConfigurationRuleEngine(List.of(
                         passingRule("duplicate.rule"),
@@ -71,14 +75,22 @@ class ConfigurationRuleEngineTest {
                 .withMessage("Duplicate rule identifier: duplicate.rule");
     }
 
-    @Test
-    void returnsAnImmutableResult() {
-        ConfigurationViolation violation = new ConfigurationViolation("violated.rule", "Unsafe configuration");
-        ConfigurationRuleEngine engine = new ConfigurationRuleEngine(List.of(violatedRule(violation)));
-        List<ConfigurationViolation> result = engine.evaluate(environment);
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "\t"})
+    void rejectsBlankRuleIds(String ruleId) {
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> new ConfigurationRuleEngine(List.of(passingRule(ruleId))))
+                .withMessage("Rule identifier must not be blank");
+    }
 
-        assertThat(result).isUnmodifiable();
-        assertThat(engine.evaluate(environment)).containsExactly(violation);
+    @Test
+    void rejectsNullRuleResults() {
+        ConfigurationRuleEngine engine = new ConfigurationRuleEngine(List.of(rule("broken.rule", ignored -> null)));
+
+        assertThatNullPointerException()
+                .isThrownBy(() -> engine.evaluate(environment))
+                .withMessage("Rule 'broken.rule' returned null");
     }
 
     @Test
@@ -96,7 +108,7 @@ class ConfigurationRuleEngineTest {
         return rule(ruleId, ignored -> Optional.empty());
     }
 
-    private static ConfigurationRule violatedRule(ConfigurationViolation violation) {
+    private static ConfigurationRule failingRule(ConfigurationViolation violation) {
         return rule(violation.ruleId(), ignored -> Optional.of(violation));
     }
 

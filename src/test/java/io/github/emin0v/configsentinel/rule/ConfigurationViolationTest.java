@@ -11,7 +11,7 @@ class ConfigurationViolationTest {
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {" ", "\t"})
-    void rejectsInvalidRuleIdentifiers(String ruleId) {
+    void rejectsBlankRuleIds(String ruleId) {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new ConfigurationViolation(ruleId, "Unsafe configuration"))
                 .withMessage("ruleId must not be blank");
@@ -20,7 +20,7 @@ class ConfigurationViolationTest {
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {" ", "\t"})
-    void rejectsInvalidMessages(String message) {
+    void rejectsBlankMessages(String message) {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new ConfigurationViolation("test.rule", message))
                 .withMessage("message must not be blank");

@@ -16,7 +16,7 @@ class ConfigSentinelAutoConfigurationTest {
             .withConfiguration(AutoConfigurations.of(ConfigSentinelAutoConfiguration.class));
 
     @Test
-    void loadsWithNoConfigurationRules() {
+    void loadsWithoutRules() {
         contextRunner.run(context -> {
             assertThat(context).hasNotFailed();
             assertThat(context).hasSingleBean(ConfigurationRuleEngine.class);
@@ -26,19 +26,19 @@ class ConfigSentinelAutoConfigurationTest {
     }
 
     @Test
-    void discoversRulesWithoutEvaluatingThemAtStartup() {
-        contextRunner.withBean(ConfigurationRule.class, StartupFailingRule::new)
+    void doesNotEvaluateRulesOnStartup() {
+        contextRunner.withBean(ConfigurationRule.class, ThrowingRule::new)
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     assertThat(context).hasSingleBean(ConfigurationRuleEngine.class);
                 });
     }
 
-    private static final class StartupFailingRule implements ConfigurationRule {
+    private static final class ThrowingRule implements ConfigurationRule {
 
         @Override
         public String id() {
-            return "startup.failing.rule";
+            return "test.rule";
         }
 
         @Override

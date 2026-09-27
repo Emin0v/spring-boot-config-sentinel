@@ -11,7 +11,7 @@ Risky settings can reach production unnoticed because they are valid Spring Boot
 
 ## Example
 
-The planned v0.1.0 release will detect unsafe configuration such as:
+The v0.1.0 rule set detects unsafe configuration such as:
 
 ```yaml
 spring:
@@ -25,7 +25,7 @@ management:
         include: "*"
 ```
 
-Detection and enforcement are not implemented yet.
+Built-in detection rules are implemented. Startup enforcement is not implemented yet.
 
 ## Status
 
@@ -35,8 +35,8 @@ Early development. v0.1.0 is in progress.
 
 Planned for v0.1.0:
 
-- a small configuration rule contract and deterministic evaluation;
-- checks for selected JPA, Actuator, logging, and error-handling settings;
+- a small configuration rule contract and deterministic evaluation (implemented);
+- checks for selected JPA, Actuator, logging, and error-handling settings (implemented);
 - profile-aware fail or warn behavior;
 - user-defined forbidden property/value checks;
 - startup diagnostics and integration tests.

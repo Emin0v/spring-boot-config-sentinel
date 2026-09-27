@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.emin0v.configsentinel.rule.ConfigurationRule;
 import io.github.emin0v.configsentinel.rule.ConfigurationViolation;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -16,10 +17,20 @@ class ConfigSentinelAutoConfigurationTest {
             .withConfiguration(AutoConfigurations.of(ConfigSentinelAutoConfiguration.class));
 
     @Test
-    void loadsWithoutRules() {
+    void registersBuiltInRules() {
         contextRunner.run(context -> {
             assertThat(context).hasNotFailed();
             assertThat(context).hasSingleBean(ConfigurationRuleEngine.class);
+            Map<String, ConfigurationRule> rules = context.getBeansOfType(ConfigurationRule.class);
+            assertThat(rules.values())
+                    .hasSize(5)
+                    .extracting(ConfigurationRule::id)
+                    .containsExactlyInAnyOrder(
+                            "jpa.ddl-auto",
+                            "jpa.show-sql",
+                            "actuator.web-exposure",
+                            "server.stacktrace",
+                            "logging.root-level");
             assertThat(context.getBean(ConfigurationRuleEngine.class)
                     .evaluate(context.getEnvironment())).isEmpty();
         });

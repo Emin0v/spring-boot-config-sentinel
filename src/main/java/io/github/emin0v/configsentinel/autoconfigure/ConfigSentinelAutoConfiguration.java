@@ -9,6 +9,31 @@ import org.springframework.context.annotation.Bean;
 public class ConfigSentinelAutoConfiguration {
 
     @Bean
+    JpaDdlAutoRule jpaDdlAutoRule() {
+        return new JpaDdlAutoRule();
+    }
+
+    @Bean
+    JpaShowSqlRule jpaShowSqlRule() {
+        return new JpaShowSqlRule();
+    }
+
+    @Bean
+    ActuatorExposureRule actuatorExposureRule() {
+        return new ActuatorExposureRule();
+    }
+
+    @Bean
+    StacktraceExposureRule stacktraceExposureRule() {
+        return new StacktraceExposureRule();
+    }
+
+    @Bean
+    RootLoggingRule rootLoggingRule() {
+        return new RootLoggingRule();
+    }
+
+    @Bean
     ConfigurationRuleEngine configurationRuleEngine(List<ConfigurationRule> rules) {
         return new ConfigurationRuleEngine(rules);
     }

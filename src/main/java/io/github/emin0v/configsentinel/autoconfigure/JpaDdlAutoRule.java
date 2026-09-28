@@ -10,7 +10,7 @@ final class JpaDdlAutoRule implements ConfigurationRule {
 
     private static final String ID = "jpa.ddl-auto";
     private static final String PROPERTY = "spring.jpa.hibernate.ddl-auto";
-    private static final Set<String> UNSAFE_VALUES = Set.of("update", "create", "create-drop");
+    private static final Set<String> UNSAFE_VALUES = Set.of("update", "create", "create-drop", "create-only", "drop");
 
     @Override
     public String id() {

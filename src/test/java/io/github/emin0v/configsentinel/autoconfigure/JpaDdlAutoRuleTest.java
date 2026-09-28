@@ -14,7 +14,7 @@ class JpaDdlAutoRuleTest {
     private final JpaDdlAutoRule rule = new JpaDdlAutoRule();
 
     @ParameterizedTest
-    @ValueSource(strings = {"update", "create", "create-drop", " UPDATE "})
+    @ValueSource(strings = {"update", "create", "create-drop", "create-only", "drop", " UPDATE "})
     void flagsUnsafeModes(String value) {
         MockEnvironment environment = new MockEnvironment()
                 .withProperty("spring.jpa.hibernate.ddl-auto", value);

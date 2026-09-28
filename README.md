@@ -25,7 +25,31 @@ management:
         include: "*"
 ```
 
-Built-in detection rules are implemented. Startup enforcement is not implemented yet.
+Configuration Sentinel evaluates the built-in rules during application context initialization when an active profile
+matches:
+
+```yaml
+config-sentinel:
+  enabled: true
+  profiles:
+    - prod
+    - production
+  action: FAIL
+```
+
+These are the defaults. `FAIL` prevents successful context startup and reports every violation, for example:
+
+```text
+Config Sentinel found unsafe configuration:
+- [jpa.show-sql] spring.jpa.show-sql is set to 'true'
+```
+
+Set `action: WARN` to log the same violations and allow startup, or set `enabled: false` to skip evaluation. Profiles
+are matched using Spring's effective profile handling; if none of the configured profiles matches, rules are not
+evaluated.
+
+Enforcement runs after ordinary singleton instantiation and before context refresh completes. It prevents successful
+startup in `FAIL` mode, but does not guarantee that no earlier bean-initialization side effect has occurred.
 
 ## Status
 
@@ -37,9 +61,9 @@ Planned for v0.1.0:
 
 - a small configuration rule contract and deterministic evaluation (implemented);
 - checks for selected JPA, Actuator, logging, and error-handling settings (implemented);
-- profile-aware fail or warn behavior;
+- profile-aware fail or warn behavior (implemented);
 - user-defined forbidden property/value checks;
-- startup diagnostics and integration tests.
+- startup diagnostics and integration tests (implemented).
 
 ## Non-goals
 

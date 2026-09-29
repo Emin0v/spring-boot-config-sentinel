@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.LazyInitializationBeanFactoryPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -62,6 +63,19 @@ class ConfigurationEnforcerTest {
             assertThat(context).hasFailed();
             assertThat(rootCause(context)).hasMessageContaining("[jpa.show-sql]");
         });
+    }
+
+    @Test
+    void enforcesWhenGlobalLazyInitializationIsEnabled() {
+        withProfiles("prod").withInitializer(context -> context.addBeanFactoryPostProcessor(
+                        new LazyInitializationBeanFactoryPostProcessor()))
+                .withPropertyValues(UNSAFE_PROPERTY)
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(rootCause(context))
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessageContaining("[jpa.show-sql] spring.jpa.show-sql is set to 'true'");
+                });
     }
 
     @Test

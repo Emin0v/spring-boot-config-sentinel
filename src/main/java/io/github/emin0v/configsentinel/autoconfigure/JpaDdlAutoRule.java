@@ -1,11 +1,12 @@
 package io.github.emin0v.configsentinel.autoconfigure;
 
+import io.github.emin0v.configsentinel.rule.ConfigurationRule;
 import io.github.emin0v.configsentinel.rule.ConfigurationViolation;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.core.env.Environment;
 
-final class JpaDdlAutoRule implements BuiltInConfigurationRule {
+final class JpaDdlAutoRule implements ConfigurationRule {
 
     private static final String ID = "jpa.ddl-auto";
     private static final String PROPERTY = "spring.jpa.hibernate.ddl-auto";

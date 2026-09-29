@@ -48,10 +48,12 @@ Set `action: WARN` to log the same violations and allow startup, or set `enabled
 are matched using Spring's effective profile handling; if none of the configured profiles matches, rules are not
 evaluated.
 
-With `SpringApplication`, built-in rules run before ordinary singleton initialization. User-defined
-`ConfigurationRule` beans run later, after singleton instantiation, because they may depend on other Spring beans.
-Their failures prevent successful startup but cannot prevent earlier bean-initialization side effects. Contexts created
-without `SpringApplication` also use this later phase for built-in rules because Boot's environment post-processors do
+With `SpringApplication` in `FAIL` mode, built-in rules whose configuration is available during environment processing
+run before ordinary singleton initialization. All registered rules run in a later phase as well, so properties introduced
+after environment processing are still detected. Those late failures prevent successful startup but cannot prevent
+earlier bean-initialization side effects. `WARN` mode runs only in the later phase so each violation is reported once.
+User-defined `ConfigurationRule` beans also run in the later phase because they may depend on other Spring beans.
+Contexts created without `SpringApplication` use only this later phase because Boot's environment post-processors do
 not run in that case.
 
 ## Status

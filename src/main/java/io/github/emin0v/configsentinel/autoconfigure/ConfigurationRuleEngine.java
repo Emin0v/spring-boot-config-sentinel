@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
-import java.util.function.Predicate;
 import org.springframework.core.env.Environment;
 
 final class ConfigurationRuleEngine {
@@ -33,16 +32,9 @@ final class ConfigurationRuleEngine {
     }
 
     List<ConfigurationViolation> evaluate(Environment environment) {
-        return evaluate(environment, rule -> true);
-    }
-
-    List<ConfigurationViolation> evaluate(
-            Environment environment, Predicate<ConfigurationRule> ruleFilter) {
         Objects.requireNonNull(environment, "environment must not be null");
-        Objects.requireNonNull(ruleFilter, "ruleFilter must not be null");
 
         return rulesById.entrySet().stream()
-                .filter(entry -> ruleFilter.test(entry.getValue()))
                 .map(entry -> evaluate(entry.getKey(), entry.getValue(), environment))
                 .flatMap(Optional::stream)
                 .toList();

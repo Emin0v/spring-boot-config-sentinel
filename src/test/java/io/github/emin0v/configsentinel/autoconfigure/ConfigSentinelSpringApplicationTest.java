@@ -19,6 +19,7 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 
 @ExtendWith(OutputCaptureExtension.class)
@@ -129,6 +130,15 @@ class ConfigSentinelSpringApplicationTest {
     }
 
     @Test
+    void detectsUnsafePropertyAddedAfterEnvironmentProcessing() {
+        Throwable failure = catchThrowable(() -> run(
+                LatePropertySourceApplication.class,
+                "--spring.profiles.active=prod"));
+
+        assertThat(rootCause(failure)).hasMessageContaining(SHOW_SQL_VIOLATION);
+    }
+
+    @Test
     void evaluatesBeanBackedCustomRuleInLatePhase() {
         Throwable failure = catchThrowable(() -> run(
                 CustomRuleApplication.class,
@@ -192,6 +202,12 @@ class ConfigSentinelSpringApplicationTest {
     @Configuration(proxyBeanMethods = false)
     @ImportAutoConfiguration(ConfigSentinelAutoConfiguration.class)
     static class TestApplication {
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    @PropertySource("classpath:/late-config.properties")
+    @ImportAutoConfiguration(ConfigSentinelAutoConfiguration.class)
+    static class LatePropertySourceApplication {
     }
 
     @Configuration(proxyBeanMethods = false)

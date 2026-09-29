@@ -1,9 +1,7 @@
 package io.github.emin0v.configsentinel.autoconfigure;
 
-import io.github.emin0v.configsentinel.rule.ConfigurationRule;
 import io.github.emin0v.configsentinel.rule.ConfigurationViolation;
 import java.util.List;
-import java.util.function.Predicate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.SmartInitializingSingleton;
@@ -13,10 +11,6 @@ import org.springframework.core.env.Profiles;
 final class ConfigurationEnforcer implements SmartInitializingSingleton {
 
     private static final Log LOGGER = LogFactory.getLog(ConfigurationEnforcer.class);
-    private static final Predicate<ConfigurationRule> ALL_RULES = rule -> true;
-    private static final Predicate<ConfigurationRule> CUSTOM_RULES =
-            rule -> !(rule instanceof BuiltInConfigurationRule);
-
     private final ConfigurationRuleEngine ruleEngine;
     private final Environment environment;
     private final ConfigSentinelProperties properties;
@@ -30,10 +24,7 @@ final class ConfigurationEnforcer implements SmartInitializingSingleton {
 
     @Override
     public void afterSingletonsInstantiated() {
-        boolean builtInRulesProcessed =
-                ConfigSentinelEnvironmentPostProcessor.hasProcessedBuiltInRules(environment);
-        Predicate<ConfigurationRule> ruleFilter = builtInRulesProcessed ? CUSTOM_RULES : ALL_RULES;
-        enforce(ruleEngine, environment, properties, LOGGER, ruleFilter);
+        enforce(ruleEngine, environment, properties, LOGGER);
     }
 
     static void enforce(
@@ -41,15 +32,6 @@ final class ConfigurationEnforcer implements SmartInitializingSingleton {
             Environment environment,
             ConfigSentinelProperties properties,
             Log logger) {
-        enforce(ruleEngine, environment, properties, logger, ALL_RULES);
-    }
-
-    private static void enforce(
-            ConfigurationRuleEngine ruleEngine,
-            Environment environment,
-            ConfigSentinelProperties properties,
-            Log logger,
-            Predicate<ConfigurationRule> ruleFilter) {
         if (!properties.isEnabled()) {
             return;
         }
@@ -60,7 +42,7 @@ final class ConfigurationEnforcer implements SmartInitializingSingleton {
             return;
         }
 
-        List<ConfigurationViolation> violations = ruleEngine.evaluate(environment, ruleFilter);
+        List<ConfigurationViolation> violations = ruleEngine.evaluate(environment);
         if (violations.isEmpty()) {
             return;
         }

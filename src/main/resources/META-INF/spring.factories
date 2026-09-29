@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=\
+io.github.emin0v.configsentinel.autoconfigure.ConfigSentinelEnvironmentPostProcessor

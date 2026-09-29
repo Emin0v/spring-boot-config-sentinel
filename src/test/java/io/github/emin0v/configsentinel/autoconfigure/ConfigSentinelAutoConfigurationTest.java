@@ -21,6 +21,12 @@ class ConfigSentinelAutoConfigurationTest {
         contextRunner.run(context -> {
             assertThat(context).hasNotFailed();
             assertThat(context).hasSingleBean(ConfigurationRuleEngine.class);
+            assertThat(context).hasSingleBean(ConfigurationEnforcer.class);
+            assertThat(context).hasSingleBean(ConfigSentinelProperties.class);
+            ConfigSentinelProperties properties = context.getBean(ConfigSentinelProperties.class);
+            assertThat(properties.isEnabled()).isTrue();
+            assertThat(properties.getProfiles()).containsExactly("prod", "production");
+            assertThat(properties.getAction()).isEqualTo(ConfigSentinelProperties.Action.FAIL);
             Map<String, ConfigurationRule> rules = context.getBeansOfType(ConfigurationRule.class);
             assertThat(rules.values())
                     .hasSize(5)

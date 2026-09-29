@@ -1,11 +1,10 @@
 package io.github.emin0v.configsentinel.autoconfigure;
 
-import io.github.emin0v.configsentinel.rule.ConfigurationRule;
 import io.github.emin0v.configsentinel.rule.ConfigurationViolation;
 import java.util.Optional;
 import org.springframework.core.env.Environment;
 
-final class JpaShowSqlRule implements ConfigurationRule {
+final class JpaShowSqlRule implements BuiltInConfigurationRule {
 
     private static final String ID = "jpa.show-sql";
     private static final String PROPERTY = "spring.jpa.show-sql";

@@ -25,8 +25,8 @@ management:
         include: "*"
 ```
 
-Configuration Sentinel evaluates the built-in rules during application context initialization when an active profile
-matches:
+Configuration Sentinel evaluates the built-in rules after Spring Boot has loaded ConfigData and before it creates the
+application context when an active profile matches:
 
 ```yaml
 config-sentinel:
@@ -48,8 +48,11 @@ Set `action: WARN` to log the same violations and allow startup, or set `enabled
 are matched using Spring's effective profile handling; if none of the configured profiles matches, rules are not
 evaluated.
 
-Enforcement runs after ordinary singleton instantiation and before context refresh completes. It prevents successful
-startup in `FAIL` mode, but does not guarantee that no earlier bean-initialization side effect has occurred.
+With `SpringApplication`, built-in rules run before ordinary singleton initialization. User-defined
+`ConfigurationRule` beans run later, after singleton instantiation, because they may depend on other Spring beans.
+Their failures prevent successful startup but cannot prevent earlier bean-initialization side effects. Contexts created
+without `SpringApplication` also use this later phase for built-in rules because Boot's environment post-processors do
+not run in that case.
 
 ## Status
 

@@ -1,6 +1,7 @@
 package io.github.emin0v.configsentinel.autoconfigure;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -11,12 +12,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.Banner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
-import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
-import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Configuration;
 
 class HibernateInitializationOrderTest {
@@ -24,32 +26,32 @@ class HibernateInitializationOrderTest {
     private static final String DATABASE_URL =
             "jdbc:h2:mem:config_sentinel_initialization_order;DB_CLOSE_DELAY=-1";
 
-    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(
-                    DataSourceAutoConfiguration.class,
-                    HibernateJpaAutoConfiguration.class,
-                    ConfigSentinelAutoConfiguration.class))
-            .withUserConfiguration(JpaTestConfiguration.class)
-            .withInitializer(context -> context.getEnvironment().setActiveProfiles("prod"))
-            .withPropertyValues(
-                    "spring.datasource.url=" + DATABASE_URL,
-                    "spring.datasource.username=sa",
-                    "spring.datasource.password=",
-                    "spring.jpa.hibernate.ddl-auto=create");
-
     @Test
-    void hibernateCreatesSchemaBeforeEnforcementRejectsContext() throws SQLException {
+    void rejectsConfigurationBeforeHibernateCreatesSchema() throws SQLException {
         assertThat(probeTableExists()).isFalse();
 
-        contextRunner.run(context -> {
-            assertThat(context).hasFailed();
-            assertThat(rootCause(context))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining(
-                            "[jpa.ddl-auto] spring.jpa.hibernate.ddl-auto is set to 'create'");
-        });
+        Throwable failure = catchThrowable(() -> application().run(
+                "--spring.profiles.active=prod",
+                "--spring.datasource.url=" + DATABASE_URL,
+                "--spring.datasource.username=sa",
+                "--spring.datasource.password=",
+                "--spring.jpa.hibernate.ddl-auto=create"));
 
-        assertThat(probeTableExists()).isTrue();
+        assertThat(failure).isNotNull();
+        assertThat(rootCause(failure))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining(
+                        "[jpa.ddl-auto] spring.jpa.hibernate.ddl-auto is set to 'create'");
+        assertThat(probeTableExists()).isFalse();
+    }
+
+    private static SpringApplication application() {
+        SpringApplication application = new SpringApplication(JpaTestConfiguration.class);
+        application.setBannerMode(Banner.Mode.OFF);
+        application.setLogStartupInfo(false);
+        application.setRegisterShutdownHook(false);
+        application.setWebApplicationType(WebApplicationType.NONE);
+        return application;
     }
 
     private static boolean probeTableExists() throws SQLException {
@@ -65,8 +67,8 @@ class HibernateInitializationOrderTest {
         }
     }
 
-    private static Throwable rootCause(AssertableApplicationContext context) {
-        Throwable cause = context.getStartupFailure();
+    private static Throwable rootCause(Throwable failure) {
+        Throwable cause = failure;
         while (cause.getCause() != null) {
             cause = cause.getCause();
         }
@@ -75,6 +77,11 @@ class HibernateInitializationOrderTest {
 
     @Configuration(proxyBeanMethods = false)
     @EntityScan(basePackageClasses = ProbeEntity.class)
+    @ImportAutoConfiguration({
+        DataSourceAutoConfiguration.class,
+        HibernateJpaAutoConfiguration.class,
+        ConfigSentinelAutoConfiguration.class
+    })
     static class JpaTestConfiguration {
     }
 

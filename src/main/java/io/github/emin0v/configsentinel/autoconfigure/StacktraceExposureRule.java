@@ -1,11 +1,10 @@
 package io.github.emin0v.configsentinel.autoconfigure;
 
-import io.github.emin0v.configsentinel.rule.ConfigurationRule;
 import io.github.emin0v.configsentinel.rule.ConfigurationViolation;
 import java.util.Optional;
 import org.springframework.core.env.Environment;
 
-final class StacktraceExposureRule implements ConfigurationRule {
+final class StacktraceExposureRule implements BuiltInConfigurationRule {
 
     private static final String ID = "server.stacktrace";
     private static final String PROPERTY = "server.error.include-stacktrace";

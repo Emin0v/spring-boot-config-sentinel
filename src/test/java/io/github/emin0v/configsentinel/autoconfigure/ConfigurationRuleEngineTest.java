@@ -67,6 +67,24 @@ class ConfigurationRuleEngineTest {
     }
 
     @Test
+    void evaluatesOnlySelectedRules() {
+        List<String> evaluatedRuleIds = new ArrayList<>();
+        ConfigurationRule selectedRule = rule("selected.rule", ignored -> {
+            evaluatedRuleIds.add("selected.rule");
+            return Optional.empty();
+        });
+        ConfigurationRule skippedRule = rule("skipped.rule", ignored -> {
+            evaluatedRuleIds.add("skipped.rule");
+            return Optional.empty();
+        });
+        ConfigurationRuleEngine engine = new ConfigurationRuleEngine(List.of(skippedRule, selectedRule));
+
+        engine.evaluate(environment, rule -> rule == selectedRule);
+
+        assertThat(evaluatedRuleIds).containsExactly("selected.rule");
+    }
+
+    @Test
     void rejectsDuplicateRuleIds() {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new ConfigurationRuleEngine(List.of(

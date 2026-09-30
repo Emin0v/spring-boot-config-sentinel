@@ -56,6 +56,30 @@ User-defined `ConfigurationRule` beans also run in the later phase because they 
 Contexts created without `SpringApplication` use only this later phase because Boot's environment post-processors do
 not run in that case.
 
+### Custom property rules
+
+Declarative rules can reject exact values for application properties:
+
+```yaml
+payment:
+  mock-enabled: true
+
+config-sentinel:
+  custom-rules:
+    - property: payment.mock-enabled
+      forbidden-values:
+        - "true"
+```
+
+Values are compared as exact, case-sensitive strings; they are not trimmed or normalized. A missing property passes.
+Diagnostics identify the property but do not include its configured or forbidden values. Duplicate properties and
+generated rule IDs that conflict with Java-defined `ConfigurationRule` beans are rejected.
+
+In `FAIL` mode, declarative rules loaded through ConfigData run during early environment processing and again during
+the late validation phase. Properties added later, such as through `@PropertySource`, can only be detected in the late
+phase, after some bean initialization may already have happened. `ConfigurationRule` beans always run only in that
+late phase.
+
 ## Status
 
 Early development. v0.1.0 is in progress.
@@ -67,7 +91,7 @@ Planned for v0.1.0:
 - a small configuration rule contract and deterministic evaluation (implemented);
 - checks for selected JPA, Actuator, logging, and error-handling settings (implemented);
 - profile-aware fail or warn behavior (implemented);
-- user-defined forbidden property/value checks;
+- user-defined forbidden property/value checks (implemented);
 - startup diagnostics and integration tests (implemented).
 
 ## Non-goals

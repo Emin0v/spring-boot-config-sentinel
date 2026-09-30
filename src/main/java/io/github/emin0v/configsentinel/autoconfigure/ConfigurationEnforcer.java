@@ -42,7 +42,9 @@ final class ConfigurationEnforcer implements SmartInitializingSingleton {
             return;
         }
 
-        List<ConfigurationViolation> violations = ruleEngine.evaluate(environment);
+        List<ConfigurationViolation> violations = ruleEngine
+                .withAdditionalRules(CustomPropertyRule.createRules(properties.getCustomRules()))
+                .evaluate(environment);
         if (violations.isEmpty()) {
             return;
         }

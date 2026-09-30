@@ -75,6 +75,15 @@ class ConfigurationRuleEngineTest {
                 .withMessage("Duplicate rule identifier: duplicate.rule");
     }
 
+    @Test
+    void rejectsDuplicateIdsFromAdditionalRules() {
+        ConfigurationRuleEngine engine = new ConfigurationRuleEngine(List.of(passingRule("custom.example")));
+
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> engine.withAdditionalRules(List.of(passingRule("custom.example"))))
+                .withMessage("Duplicate rule identifier: custom.example");
+    }
+
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {" ", "\t"})

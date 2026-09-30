@@ -179,6 +179,85 @@ class ConfigurationEnforcerTest {
         assertThat(evaluations).hasValue(1);
     }
 
+    @Test
+    void rejectsCustomRuleWithoutProperty() {
+        withProfiles("prod").withPropertyValues(
+                        "config-sentinel.custom-rules[0].forbidden-values[0]=true")
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(rootCause(context))
+                            .isInstanceOf(IllegalArgumentException.class)
+                            .hasMessage("config-sentinel.custom-rules[0].property must not be blank");
+                });
+    }
+
+    @Test
+    void rejectsCustomRuleWithoutForbiddenValues() {
+        withProfiles("prod").withPropertyValues(
+                        "config-sentinel.custom-rules[0].property=payment.mock-enabled")
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(rootCause(context))
+                            .isInstanceOf(IllegalArgumentException.class)
+                            .hasMessage(
+                                    "config-sentinel.custom-rules[0].forbidden-values must contain at least one value");
+                });
+    }
+
+    @Test
+    void rejectsDuplicateCustomPropertyWithoutDisclosingValues() {
+        withProfiles("prod").withPropertyValues(
+                        "config-sentinel.custom-rules[0].property=payment.mock-enabled",
+                        "config-sentinel.custom-rules[0].forbidden-values[0]=first-sensitive-value",
+                        "config-sentinel.custom-rules[1].property=payment.mock-enabled",
+                        "config-sentinel.custom-rules[1].forbidden-values[0]=second-sensitive-value")
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(rootCause(context))
+                            .isInstanceOf(IllegalArgumentException.class)
+                            .hasMessage("Duplicate rule identifier: custom.payment.mock-enabled")
+                            .hasMessageNotContaining("first-sensitive-value")
+                            .hasMessageNotContaining("second-sensitive-value");
+                });
+    }
+
+    @Test
+    void rejectsGeneratedIdThatDuplicatesJavaRule() {
+        withProfiles("prod").withPropertyValues(
+                        "payment.mock-enabled=false",
+                        "config-sentinel.custom-rules[0].property=payment.mock-enabled",
+                        "config-sentinel.custom-rules[0].forbidden-values[0]=true")
+                .withBean(ConfigurationRule.class, GeneratedIdCollisionRule::new)
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(rootCause(context))
+                            .isInstanceOf(IllegalArgumentException.class)
+                            .hasMessage("Duplicate rule identifier: custom.payment.mock-enabled");
+                });
+    }
+
+    @Test
+    void appliesEnabledAndProfileGatesToCustomRules() {
+        String[] customRuleProperties = {
+            "payment.mock-enabled=true",
+            "config-sentinel.custom-rules[0].property=payment.mock-enabled",
+            "config-sentinel.custom-rules[0].forbidden-values[0]=true"
+        };
+
+        withProfiles("dev").withPropertyValues(customRuleProperties)
+                .run(context -> assertThat(context).hasNotFailed());
+        withProfiles("prod").withPropertyValues(customRuleProperties)
+                .withPropertyValues("config-sentinel.enabled=false")
+                .run(context -> assertThat(context).hasNotFailed());
+        withProfiles("stage").withPropertyValues(customRuleProperties)
+                .withPropertyValues("config-sentinel.profiles[0]=stage")
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(rootCause(context))
+                            .hasMessageContaining("[custom.payment.mock-enabled] Property 'payment.mock-enabled'");
+                });
+    }
+
     private ApplicationContextRunner withProfiles(String... profiles) {
         return contextRunner.withInitializer(context -> {
             ConfigurableEnvironment environment = context.getEnvironment();
@@ -236,6 +315,19 @@ class ConfigurationEnforcerTest {
         @Override
         public Optional<ConfigurationViolation> evaluate(Environment environment) {
             evaluations.incrementAndGet();
+            return Optional.empty();
+        }
+    }
+
+    private static final class GeneratedIdCollisionRule implements ConfigurationRule {
+
+        @Override
+        public String id() {
+            return "custom.payment.mock-enabled";
+        }
+
+        @Override
+        public Optional<ConfigurationViolation> evaluate(Environment environment) {
             return Optional.empty();
         }
     }

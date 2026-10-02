@@ -9,6 +9,7 @@ final class ConfigSentinelProperties {
     private boolean enabled = true;
     private List<String> profiles = List.of("prod", "production");
     private Action action = Action.FAIL;
+    private List<CustomRule> customRules = List.of();
 
     public boolean isEnabled() {
         return enabled;
@@ -34,6 +35,14 @@ final class ConfigSentinelProperties {
         this.action = action;
     }
 
+    public List<CustomRule> getCustomRules() {
+        return customRules;
+    }
+
+    public void setCustomRules(List<CustomRule> customRules) {
+        this.customRules = customRules;
+    }
+
     void validate() {
         if (profiles == null || profiles.isEmpty()) {
             throw new IllegalArgumentException("config-sentinel.profiles must contain at least one profile");
@@ -49,5 +58,27 @@ final class ConfigSentinelProperties {
     enum Action {
         FAIL,
         WARN
+    }
+
+    static final class CustomRule {
+
+        private String property;
+        private List<String> forbiddenValues = List.of();
+
+        public String getProperty() {
+            return property;
+        }
+
+        public void setProperty(String property) {
+            this.property = property;
+        }
+
+        public List<String> getForbiddenValues() {
+            return forbiddenValues;
+        }
+
+        public void setForbiddenValues(List<String> forbiddenValues) {
+            this.forbiddenValues = forbiddenValues;
+        }
     }
 }

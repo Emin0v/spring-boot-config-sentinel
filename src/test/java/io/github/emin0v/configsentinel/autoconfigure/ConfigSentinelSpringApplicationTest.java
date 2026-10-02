@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import io.github.emin0v.configsentinel.rule.ConfigurationRule;
 import io.github.emin0v.configsentinel.rule.ConfigurationViolation;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,6 +28,9 @@ class ConfigSentinelSpringApplicationTest {
 
     private static final String SHOW_SQL_VIOLATION =
             "[jpa.show-sql] spring.jpa.show-sql is set to 'true'";
+    private static final String CUSTOM_VIOLATION =
+            "[custom.payment.mock-enabled] Property 'payment.mock-enabled' matches a forbidden value";
+    private static final AtomicBoolean PROBE_INITIALIZED = new AtomicBoolean();
 
     @ParameterizedTest
     @ValueSource(strings = {"prod", "production"})
@@ -181,6 +185,60 @@ class ConfigSentinelSpringApplicationTest {
                 .hasMessage("config-sentinel.profiles must not contain blank profiles");
     }
 
+    @Test
+    void bindsCustomRulesFromYaml() {
+        try (ConfigurableApplicationContext context = run(
+                TestApplication.class,
+                "--spring.config.location=classpath:/custom-rule-config/")) {
+            ConfigSentinelProperties.CustomRule rule = context.getBean(ConfigSentinelProperties.class)
+                    .getCustomRules()
+                    .getFirst();
+            assertThat(rule.getProperty()).isEqualTo("payment.mock-enabled");
+            assertThat(rule.getForbiddenValues()).containsExactly("true", "mock");
+        }
+    }
+
+    @Test
+    void failsCustomRuleBeforeSingletonInitialization() {
+        PROBE_INITIALIZED.set(false);
+
+        Throwable failure = catchThrowable(() -> run(
+                ProbeApplication.class,
+                "--spring.config.location=classpath:/custom-rule-config/",
+                "--payment.mock-enabled=true"));
+
+        assertThat(rootCause(failure)).hasMessageContaining(CUSTOM_VIOLATION);
+        assertThat(PROBE_INITIALIZED).isFalse();
+    }
+
+    @Test
+    void warnsForCustomRuleOnceWithoutDisclosingValues(CapturedOutput output) {
+        try (ConfigurableApplicationContext context = run(
+                TestApplication.class,
+                "--spring.profiles.active=prod",
+                "--config-sentinel.action=WARN",
+                "--config-sentinel.custom-rules[0].property=payment.mock-enabled",
+                "--config-sentinel.custom-rules[0].forbidden-values[0]=actual-sensitive-value",
+                "--config-sentinel.custom-rules[0].forbidden-values[1]=other-sensitive-value",
+                "--payment.mock-enabled=actual-sensitive-value")) {
+            assertThat(context.isActive()).isTrue();
+        }
+
+        assertThat(output).containsOnlyOnce(CUSTOM_VIOLATION)
+                .doesNotContain("actual-sensitive-value", "other-sensitive-value");
+    }
+
+    @Test
+    void detectsCustomRulePropertyAddedAfterEnvironmentProcessing() {
+        Throwable failure = catchThrowable(() -> run(
+                LateCustomPropertySourceApplication.class,
+                "--spring.profiles.active=prod",
+                "--config-sentinel.custom-rules[0].property=payment.mock-enabled",
+                "--config-sentinel.custom-rules[0].forbidden-values[0]=true"));
+
+        assertThat(rootCause(failure)).hasMessageContaining(CUSTOM_VIOLATION);
+    }
+
     private static ConfigurableApplicationContext run(Class<?> source, String... arguments) {
         SpringApplication application = new SpringApplication(source);
         application.setBannerMode(Banner.Mode.OFF);
@@ -208,6 +266,23 @@ class ConfigSentinelSpringApplicationTest {
     @PropertySource("classpath:/late-config.properties")
     @ImportAutoConfiguration(ConfigSentinelAutoConfiguration.class)
     static class LatePropertySourceApplication {
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    @PropertySource("classpath:/late-custom-config.properties")
+    @ImportAutoConfiguration(ConfigSentinelAutoConfiguration.class)
+    static class LateCustomPropertySourceApplication {
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    @ImportAutoConfiguration(ConfigSentinelAutoConfiguration.class)
+    static class ProbeApplication {
+
+        @Bean
+        Object initializationProbe() {
+            PROBE_INITIALIZED.set(true);
+            return new Object();
+        }
     }
 
     @Configuration(proxyBeanMethods = false)

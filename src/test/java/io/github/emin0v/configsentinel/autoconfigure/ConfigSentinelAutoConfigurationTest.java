@@ -27,6 +27,7 @@ class ConfigSentinelAutoConfigurationTest {
             assertThat(properties.isEnabled()).isTrue();
             assertThat(properties.getProfiles()).containsExactly("prod", "production");
             assertThat(properties.getAction()).isEqualTo(ConfigSentinelProperties.Action.FAIL);
+            assertThat(properties.getCustomRules()).isEmpty();
             Map<String, ConfigurationRule> rules = context.getBeansOfType(ConfigurationRule.class);
             assertThat(rules.values())
                     .hasSize(5)
@@ -48,6 +49,24 @@ class ConfigSentinelAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     assertThat(context).hasSingleBean(ConfigurationRuleEngine.class);
+                });
+    }
+
+    @Test
+    void bindsIndexedCustomRules() {
+        contextRunner.withPropertyValues(
+                        "spring.profiles.active=prod",
+                        "payment.mock-enabled=false",
+                        "config-sentinel.custom-rules[0].property=payment.mock-enabled",
+                        "config-sentinel.custom-rules[0].forbidden-values[0]=true",
+                        "config-sentinel.custom-rules[0].forbidden-values[1]=mock")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    ConfigSentinelProperties.CustomRule rule = context.getBean(ConfigSentinelProperties.class)
+                            .getCustomRules()
+                            .getFirst();
+                    assertThat(rule.getProperty()).isEqualTo("payment.mock-enabled");
+                    assertThat(rule.getForbiddenValues()).containsExactly("true", "mock");
                 });
     }
 

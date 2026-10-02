@@ -2,6 +2,7 @@ package io.github.emin0v.configsentinel.autoconfigure;
 
 import io.github.emin0v.configsentinel.rule.ConfigurationRule;
 import io.github.emin0v.configsentinel.rule.ConfigurationViolation;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,17 @@ final class ConfigurationRuleEngine {
                 .map(entry -> evaluate(entry.getKey(), entry.getValue(), environment))
                 .flatMap(Optional::stream)
                 .toList();
+    }
+
+    ConfigurationRuleEngine withAdditionalRules(List<ConfigurationRule> additionalRules) {
+        Objects.requireNonNull(additionalRules, "additionalRules must not be null");
+        if (additionalRules.isEmpty()) {
+            return this;
+        }
+
+        List<ConfigurationRule> combinedRules = new ArrayList<>(rulesById.values());
+        combinedRules.addAll(additionalRules);
+        return new ConfigurationRuleEngine(combinedRules);
     }
 
     private Optional<ConfigurationViolation> evaluate(

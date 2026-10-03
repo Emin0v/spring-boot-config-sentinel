@@ -1,4 +1,5 @@
 plugins {
+    id 'signing'
     id 'java-library'
     id 'checkstyle'
     id 'maven-publish'
@@ -101,4 +102,9 @@ publishing {
             }
         }
     }
+}
+
+signing {
+    useGpgCmd()
+    sign publishing.publications.mavenJava
 }

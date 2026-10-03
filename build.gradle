@@ -1,16 +1,19 @@
 plugins {
     id 'java-library'
     id 'checkstyle'
+    id 'maven-publish'
     id 'io.spring.dependency-management' version "${springDependencyManagementVersion}"
 }
 
 group = 'io.github.emin0v'
-version = '0.1.0-SNAPSHOT'
+version = '0.1.0'
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
+    withJavadocJar()
+    withSourcesJar()
 }
 
 repositories {
@@ -55,4 +58,47 @@ test {
 tasks.withType(AbstractArchiveTask).configureEach {
     preserveFileTimestamps = false
     reproducibleFileOrder = true
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'spring-boot-config-sentinel'
+            from components.java
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+
+            pom {
+                name = 'Spring Boot Config Sentinel'
+                description = 'Detect selected unsafe production configuration during Spring Boot startup.'
+                url = 'https://github.com/Emin0v/spring-boot-config-sentinel'
+
+                licenses {
+                    license {
+                        name = 'Apache License, Version 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution = 'repo'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'Emin0v'
+                        name = 'Mahammad Eminov'
+                        url = 'https://github.com/Emin0v'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/Emin0v/spring-boot-config-sentinel.git'
+                    developerConnection = 'scm:git:ssh://git@github.com/Emin0v/spring-boot-config-sentinel.git'
+                    url = 'https://github.com/Emin0v/spring-boot-config-sentinel'
+                }
+            }
+        }
+    }
 }

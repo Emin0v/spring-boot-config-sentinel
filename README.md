@@ -56,6 +56,10 @@ User-defined `ConfigurationRule` beans also run in the later phase because they 
 Contexts created without `SpringApplication` use only this later phase because Boot's environment post-processors do
 not run in that case.
 
+The [basic sample](examples/basic) pairs a minimal `@SpringBootApplication` with production configuration that
+intentionally violates one built-in rule and one custom property rule. Set both example values to `false` to see the
+same application start with safe configuration.
+
 ### Custom property rules
 
 Declarative rules can reject exact values for application properties:

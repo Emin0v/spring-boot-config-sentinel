@@ -1,0 +1,11 @@
+spring:
+  profiles:
+    active: prod
+  jpa:
+    show-sql: true
+
+config-sentinel:
+  enabled: false
+  profiles:
+    - prod
+  action: FAIL

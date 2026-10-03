@@ -1,0 +1,29 @@
+spring:
+  profiles:
+    active: prod
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
+
+server:
+  error:
+    include-stacktrace: never
+
+logging:
+  level:
+    root: INFO
+
+config-sentinel:
+  enabled: true
+  profiles:
+    - prod
+  action: FAIL

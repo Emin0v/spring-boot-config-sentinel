@@ -13,7 +13,7 @@ of explicitly configured properties when selected profiles are active, then eith
 It is not a secret manager, full security scanner, configuration server, or replacement for Spring Boot configuration
 property validation.
 
-Release coordinate:
+Maven coordinates:
 
 ```text
 io.github.emin0v:spring-boot-config-sentinel:0.1.0

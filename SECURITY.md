@@ -2,7 +2,8 @@
 
 ## Supported versions
 
-Security fixes target the latest released version.
+No supported release exists until v0.1.0 is published. After the first release, security fixes will target the latest
+released version.
 
 ## Reporting a vulnerability
 

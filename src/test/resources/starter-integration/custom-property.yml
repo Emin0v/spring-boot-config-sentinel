@@ -1,0 +1,16 @@
+spring:
+  profiles:
+    active: prod
+
+payment:
+  mock-enabled: forbidden-setting
+
+config-sentinel:
+  enabled: true
+  profiles:
+    - prod
+  action: FAIL
+  custom-rules:
+    - property: payment.mock-enabled
+      forbidden-values:
+        - forbidden-setting

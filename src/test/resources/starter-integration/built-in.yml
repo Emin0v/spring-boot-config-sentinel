@@ -1,0 +1,9 @@
+spring:
+  profiles:
+    active: prod
+
+config-sentinel:
+  enabled: true
+  profiles:
+    - prod
+  action: FAIL

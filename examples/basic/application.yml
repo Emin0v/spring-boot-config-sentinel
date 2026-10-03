@@ -1,0 +1,18 @@
+spring:
+  profiles:
+    active: prod
+  jpa:
+    show-sql: true
+
+payment:
+  mock-enabled: true
+
+config-sentinel:
+  enabled: true
+  profiles:
+    - prod
+  action: FAIL
+  custom-rules:
+    - property: payment.mock-enabled
+      forbidden-values:
+        - "true"

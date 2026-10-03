@@ -1,0 +1,12 @@
+spring:
+  profiles:
+    active: prod
+
+sample:
+  java-rule-enabled: true
+
+config-sentinel:
+  enabled: true
+  profiles:
+    - prod
+  action: FAIL

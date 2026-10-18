@@ -13,6 +13,29 @@ of explicitly configured properties when selected profiles are active, then eith
 It is not a secret manager, full security scanner, configuration server, or replacement for Spring Boot configuration
 property validation.
 
+## Installation
+
+Version `0.1.0` is available from Maven Central. Add it to an existing Spring Boot application:
+
+Maven:
+
+```xml
+<dependency>
+    <groupId>io.github.emin0v</groupId>
+    <artifactId>spring-boot-config-sentinel</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
+Gradle:
+
+```groovy
+implementation 'io.github.emin0v:spring-boot-config-sentinel:0.1.0'
+```
+
+The published artifact is tested with Java 21 and Spring Boot 3.5.16. See the
+[compatibility section](#compatibility) before using another release line.
+
 Maven coordinates:
 
 ```text
@@ -115,8 +138,10 @@ and unique across built-in, declarative, and Java rules.
 
 ## Example
 
-The [basic sample](examples/basic) contains a minimal `@SpringBootApplication` and configuration that intentionally
-violates one built-in rule and one custom property rule. Set both example values to `false` for a safe startup.
+The [basic example snippets](examples/basic) contain a minimal `@SpringBootApplication` and configuration that intentionally
+violates one built-in rule and one custom property rule. They do not form a standalone build:
+copy the configuration into an existing Spring Boot application with the dependency above.
+Set both example values to `false` for a safe startup.
 
 ## Lifecycle guarantees and limitations
 

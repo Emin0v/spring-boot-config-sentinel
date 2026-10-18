@@ -138,10 +138,16 @@ and unique across built-in, declarative, and Java rules.
 
 ## Example
 
-The [basic example snippets](examples/basic) contain a minimal `@SpringBootApplication` and configuration that intentionally
-violates one built-in rule and one custom property rule. They do not form a standalone build:
-copy the configuration into an existing Spring Boot application with the dependency above.
-Set both example values to `false` for a safe startup.
+The [runnable basic example](examples/basic) is an independent application that resolves the
+published `0.1.0` artifact from Maven Central. Its tests exercise rejected startup and a safe
+startup with overrides:
+
+```bash
+./gradlew -p examples/basic clean check
+```
+
+Run `./gradlew -p examples/basic bootRun` to see both configured violations, or follow the
+example README to override them for a safe startup.
 
 ## Lifecycle guarantees and limitations
 

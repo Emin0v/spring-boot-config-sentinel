@@ -25,3 +25,5 @@ jobs:
           cache: gradle
       - name: Verify
         run: ./gradlew check
+      - name: Verify published-artifact consumer
+        run: ./gradlew -p examples/basic check
